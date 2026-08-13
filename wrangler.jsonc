@@ -11,8 +11,8 @@
   "vars": {
     "FALLBACK_URL": "https://luzzi.dev",
     "DEFAULT_BUSINESS": "Luzzi.Dev",
-    // NFC chip UID / serial in the URL path (hex/alphanumeric, 4–64 chars).
-    "TAG_ID_PATTERN": "^[A-Za-z0-9:_-]{4,64}$"
+    // NFC UID only: 8–20 hex chars. Words like wp-json / habib never match.
+    "TAG_ID_PATTERN": "^[0-9A-Fa-f]{8,20}$"
   }
   // Secrets (set via CLI, never commit):
   //   wrangler secret put SUPABASE_URL

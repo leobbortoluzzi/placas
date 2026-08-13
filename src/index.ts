@@ -1,8 +1,10 @@
 import { getOrProvisionTag } from "./supabase";
 import {
+  DEFAULT_SERIAL_PATTERN,
   extractSerial,
   isIgnoredPath,
   isValidSerial,
+  normalizeSerial,
 } from "./validate";
 
 function redirect(to: string): Response {
@@ -42,17 +44,13 @@ export default {
       return redirect(fallback);
     }
 
-    const serial = extractSerial(request.url);
-    if (!serial || isIgnoredPath(serial)) {
+    const raw = extractSerial(request.url);
+    if (!raw || isIgnoredPath(raw)) {
       return redirect(fallback);
     }
 
-    if (
-      !isValidSerial(
-        serial,
-        env.TAG_ID_PATTERN || "^[A-Za-z0-9:_-]{4,64}$",
-      )
-    ) {
+    const serial = normalizeSerial(raw);
+    if (!isValidSerial(serial, env.TAG_ID_PATTERN || DEFAULT_SERIAL_PATTERN)) {
       return redirect(fallback);
     }
 
