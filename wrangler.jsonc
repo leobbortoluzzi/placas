@@ -7,18 +7,19 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  // Public config (not secrets). Override per env if needed.
+  // Keep dashboard-only vars/secrets (e.g. SUPABASE_SERVICE_ROLE_KEY)
+  // so a git deploy does not wipe what you set in the Cloudflare UI.
+  "keep_vars": true,
+  // Public config. Values here are sent on every deploy.
+  // Do NOT put the service_role key here — it would overwrite the dashboard secret.
   "vars": {
     "FALLBACK_URL": "https://luzzi.dev",
     "DEFAULT_BUSINESS": "Luzzi.Dev",
-    // NFC UID only: 8–20 hex chars. Words like wp-json / habib never match.
-    "TAG_ID_PATTERN": "^[0-9A-Fa-f]{8,20}$"
+    "TAG_ID_PATTERN": "^[0-9A-Fa-f]{8,20}$",
+    "SUPABASE_URL": "https://mipnlysqagmcgkiraxjv.supabase.co"
   }
-  // Secrets (set via CLI, never commit):
-  //   wrangler secret put SUPABASE_URL
-  //   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+  // SUPABASE_SERVICE_ROLE_KEY: add in the dashboard as Type = Secret
+  // (or: wrangler secret put SUPABASE_SERVICE_ROLE_KEY)
   //
-  // Custom domain (after deploy):
-  //   wrangler domains add tag.luzzi.dev
-  // or attach route in dashboard: tag.luzzi.dev/*
+  // Custom domain: wrangler domains add tag.luzzi.dev
 }

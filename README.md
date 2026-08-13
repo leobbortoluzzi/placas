@@ -80,19 +80,24 @@ npm run dev
 # http://127.0.0.1:8787/t/FF0F16FD7E0100
 
 npx wrangler login
-npx wrangler secret put SUPABASE_URL
+# service_role only (URL already ships from wrangler.jsonc):
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npm run deploy
 # attach custom domain tag.luzzi.dev
 ```
 
+`wrangler.jsonc` has `keep_vars: true`. A new deploy **does not delete** vars you added only in the dashboard.  
+Still: do **not** put `SUPABASE_SERVICE_ROLE_KEY` in `vars` in git — every deploy would reset it to the placeholder. Add it in the UI as **Secret**, once.
+
 ## Config vars
 
-| Var | Default | Meaning |
-|-----|---------|---------|
-| `FALLBACK_URL` | `https://luzzi.dev` | Default redirect + default `link` |
-| `DEFAULT_BUSINESS` | `Luzzi.Dev` | Default `business` |
-| `TAG_ID_PATTERN` | `^[0-9A-Fa-f]{8,20}$` | NFC UID only (hex) |
+| Var | Where | Meaning |
+|-----|--------|---------|
+| `FALLBACK_URL` | `wrangler.jsonc` | Default redirect + default `link` |
+| `DEFAULT_BUSINESS` | `wrangler.jsonc` | Default `business` |
+| `TAG_ID_PATTERN` | `wrangler.jsonc` | NFC UID only (hex) |
+| `SUPABASE_URL` | `wrangler.jsonc` | Project API URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Dashboard **Secret** | Service role (never commit) |
 
 ## Checklist
 
