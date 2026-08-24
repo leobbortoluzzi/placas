@@ -21,7 +21,11 @@ export function extractSerial(requestUrl: string): string | null {
   const segments = url.pathname.split("/").filter(Boolean);
   if (segments.length < 2) return null;
   if ((segments[0] ?? "").toLowerCase() !== PREFIX) return null;
-  return decodeURIComponent(segments[1] ?? "");
+  try {
+    return decodeURIComponent(segments[1] ?? "");
+  } catch {
+    return null;
+  }
 }
 
 /** Known scanner / bot paths — never persist, even if they sneak past. */

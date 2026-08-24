@@ -4,7 +4,7 @@ interface Env {
   DEFAULT_BUSINESS: string;
   /** JS regex source, e.g. ^\\d{4}$ */
   TAG_ID_PATTERN: string;
-  /** Set via `wrangler secret put SUPABASE_URL` */
+  /** Public project URL configured in wrangler.jsonc. */
   SUPABASE_URL: string;
   /** Set via `wrangler secret put SUPABASE_SERVICE_ROLE_KEY` — never expose to clients */
   SUPABASE_SERVICE_ROLE_KEY: string;

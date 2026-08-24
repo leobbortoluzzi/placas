@@ -10,6 +10,6 @@ export interface TagRow {
   /** Destination URL for the 302 redirect */
   link: string | null;
   platform: string | null;
-  /** Owner password (plaintext). Used with code for future self-service. */
+  /** Owner password (plaintext). Used with code for activation and management. */
   password: string | null;
 }

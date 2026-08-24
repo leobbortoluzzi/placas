@@ -4,6 +4,13 @@ import type { TagRow } from "./types";
 const SELECT_COLS =
   "serial_number,business,code,write_at,sale_at,link,platform,password";
 
+export interface TagUpdate {
+  link: string;
+  business: string | null;
+  platform: string | null;
+  sale_at?: string;
+}
+
 function restHeaders(env: Env, prefer?: string): HeadersInit {
   const headers: Record<string, string> = {
     apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -42,12 +49,36 @@ export async function getTag(
   return rows[0] ?? null;
 }
 
+/** SELECT by the unique human-facing code. */
+export async function getTagByCode(
+  env: Env,
+  code: string,
+): Promise<TagRow | null> {
+  const url =
+    `${baseUrl(env)}/rest/v1/tag` +
+    `?code=eq.${encodeURIComponent(code)}` +
+    `&select=${SELECT_COLS}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: restHeaders(env),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Supabase getTagByCode failed: ${res.status} ${body}`);
+  }
+
+  const rows = (await res.json()) as TagRow[];
+  return rows[0] ?? null;
+}
+
 async function insertTag(
   env: Env,
   payload: {
     serial_number: string;
     business: string;
-    link: string;
+    link: string | null;
     code: string;
     password: string;
   },
@@ -70,6 +101,55 @@ async function insertTag(
   return { ok: false, status: res.status, body };
 }
 
+async function patchTag(
+  env: Env,
+  filter: string,
+  patch: TagUpdate,
+): Promise<TagRow | null> {
+  const res = await fetch(`${baseUrl(env)}/rest/v1/tag?${filter}`, {
+    method: "PATCH",
+    headers: restHeaders(env, "return=representation"),
+    body: JSON.stringify(patch),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Supabase patchTag failed: ${res.status} ${body}`);
+  }
+
+  if (res.status === 204) return null;
+  const rows = (await res.json()) as TagRow[];
+  return rows[0] ?? null;
+}
+
+/** Update a tag only if it is still pending with the expected link value. */
+export async function activateTag(
+  env: Env,
+  serial: string,
+  expectedLink: string | null,
+  patch: TagUpdate,
+): Promise<TagRow | null> {
+  const linkFilter = expectedLink === null
+    ? "link=is.null"
+    : `link=eq.${encodeURIComponent(expectedLink)}`;
+  const filter =
+    `serial_number=eq.${encodeURIComponent(serial)}&${linkFilter}`;
+  return patchTag(env, filter, patch);
+}
+
+/** Update an authenticated tag without changing its credentials or sale time. */
+export async function updateTag(
+  env: Env,
+  serial: string,
+  patch: TagUpdate,
+): Promise<TagRow | null> {
+  return patchTag(
+    env,
+    `serial_number=eq.${encodeURIComponent(serial)}`,
+    patch,
+  );
+}
+
 /**
  * Insert-if-not-exists on first scan.
  * Generates unique `code` (4 chars) + random `password` once.
@@ -85,7 +165,7 @@ export async function provisionTag(
     const payload = {
       serial_number: serial,
       business: env.DEFAULT_BUSINESS,
-      link: env.FALLBACK_URL,
+      link: null,
       code: generateCode(4),
       password: generatePassword(10),
     };
@@ -116,7 +196,7 @@ export async function provisionTag(
 }
 
 /**
- * Load tag; if missing, create with Luzzi.Dev defaults + code + password.
+ * Load tag; if missing, create with Luzzi.Dev defaults + credentials and no link.
  */
 export async function getOrProvisionTag(
   env: Env,
